@@ -1,119 +1,252 @@
-# yahboom_rosmaster #
-Yahboom Rosmaster X3 — ROS 2 Simulation and Mecanum Control
-A ROS 2 development project for the Yahboom Rosmaster X3 platform, focused on the robot description, simulation workflow, mecanum-drive command interface, and custom action-server integration.
-Project status: The simulation and drive-control workflow has been explored in the development workspace. Integration of the custom TimedRotation action server is still in progress; this README does not claim that feature is complete.
+<div align="center">
 
-Overview
-The repository brings together ROS 2 packages for the robot description, bringup, Gazebo simulation, message/action definitions, and related control components.
-Project goals
-- Load and inspect the robot description.
-- Run the robot in the available Gazebo simulation workflow.
-- Send velocity commands to the mecanum-drive controller.
-- Define a custom TimedRotation action and integrate an action server.
-- Build a maintainable ROS 2 workspace with clearly separated packages.
-Technology stack
-- ROS 2 Jazzy
-- URDF/Xacro
-- RViz 2
-- Gazebo / Gazebo Sim
-- ros2_control
-- geometry_msgs
-- rclcpp and rclcpp_action
-- Custom ROS 2 interface: TimedRotation.action
-Package overview
-The development workspace has included these packages/directories:
-- yahboom_rosmaster_description — robot description and visualization resources
-- yahboom_rosmaster_bringup — launch and bringup scripts
-- yahboom_rosmaster_gazebo — Gazebo-related resources
-- yahboom_rosmaster_messages — custom action/message interfaces
-- yahboom_rosmaster_system_tests — system-test and action-server development
-- yahboom_rosmaster — robot-specific package/resources
-- macanum_drive_controller — controller-related package directory (the directory name in the workspace uses this spelling)
-Use colcon list after cloning to confirm the packages present in the current revision.
-Requirements
-- A ROS 2 Jazzy installation
-- colcon and ROS 2 development tools
-- Gazebo and RViz packages required by the launch files
-- Dependencies declared by the packages in this repository
-Clone and build
-Clone into the src directory of a ROS 2 workspace:
-mkdir -p ~/ros2_ws/src
-cd ~/ros2_ws/src
+# Yahboom Rosmaster X3: ROS 2 Simulation & Mecanum Control
+
+**Robot description, Gazebo bringup, mecanum-drive velocity control and a custom `TimedRotation` action interface for the Yahboom Rosmaster X3, built on ROS 2 Jazzy.**
+
+![ROS 2](https://img.shields.io/badge/ROS%202-Jazzy-22314E?logo=ros)
+![Ubuntu](https://img.shields.io/badge/Ubuntu-24.04-E95420?logo=ubuntu&logoColor=white)
+![Scope](https://img.shields.io/badge/Scope-Simulation-blue)
+![Status](https://img.shields.io/badge/Action%20Server-In%20Progress-orange)
+![License](https://img.shields.io/badge/License-ADD%20LICENSE-lightgrey)
+
+<!-- DEMO VIDEO: replace with docs/media/demo.gif or a YouTube thumbnail link -->
+> 🎥 **DEMO VIDEO PLACEHOLDER**: robot strafing in Gazebo from a `cmd_vel` command. Save as `docs/media/demo.gif`.
+
+</div>
+
+---
+
+## Table of Contents
+1. [Overview](#overview)
+2. [Demo](#demo)
+3. [Features](#features)
+4. [System Architecture](#system-architecture)
+5. [Repository Structure](#repository-structure)
+6. [Getting Started](#getting-started)
+7. [Usage](#usage)
+8. [Custom TimedRotation Action](#custom-timedrotation-action)
+9. [Results](#results)
+10. [Development Status](#development-status)
+11. [Troubleshooting](#troubleshooting)
+12. [Roadmap](#roadmap)
+13. [Acknowledgements & Licensing](#acknowledgements--licensing)
+14. [Author](#author)
+
+---
+
+## Overview
+
+This repository is a ROS 2 workspace for the **Yahboom Rosmaster X3**, a mecanum-wheel mobile robot. It covers:
+
+- the robot's **URDF/Xacro** description and RViz 2 visualization,
+- a **Gazebo** simulation bringup script,
+- a **mecanum-drive** controller driven by `geometry_msgs/msg/TwistStamped` commands,
+- a custom **`TimedRotation.action`** interface with a C++ action server (`rclcpp_action`) under development.
+
+> **Scope:** simulation and software integration. Physical-robot validation is **not claimed**. The `TimedRotation` action server is **in progress**.
+
+---
+
+## Demo
+
+| Gazebo simulation | RViz 2 |
+|:---:|:---:|
+| ![Gazebo](docs/media/gazebo.png) | ![RViz](docs/media/rviz.png) |
+| *ADD SCREENSHOT: robot in Gazebo* | *ADD SCREENSHOT: model in RViz 2* |
+
+| Lateral (strafe) motion | Rotation |
+|:---:|:---:|
+| ![Strafe](docs/media/strafe.gif) | ![Rotate](docs/media/rotate.gif) |
+| *ADD GIF: `linear.y` command* | *ADD GIF: `angular.z` command or the TimedRotation goal once it works* |
+
+📹 **Full walkthrough video:** `ADD LINK`
+
+---
+
+## Features
+
+- ✅ Robot description in **URDF/Xacro** with RViz 2 visualization
+- ✅ **Gazebo** bringup script (`rosmaster_x3_gazebo.sh`)
+- ✅ Mecanum-drive command interface at `/mecanum_drive_controller/cmd_vel` (`TwistStamped`)
+- ✅ Custom **`TimedRotation.action`** interface in its own package
+- 🟡 C++ **action server** (`rclcpp_action`): in progress
+
+---
+
+## System Architecture
+
+```mermaid
+flowchart LR
+    A[URDF / Xacro<br/>yahboom_rosmaster_description] --> B[Gazebo Sim<br/>yahboom_rosmaster_gazebo]
+    B --> C[ros2_control<br/>mecanum drive controller]
+    U[User / test node] -->|TwistStamped| D["/mecanum_drive_controller/cmd_vel"]
+    D --> C
+    E[TimedRotation.action<br/>yahboom_rosmaster_messages] --> F[Action server, in progress<br/>yahboom_rosmaster_system_tests]
+    F -.->|planned: velocity commands| D
+```
+
+<!-- Replace the dotted "planned" link once the action server publishes to cmd_vel. -->
+
+---
+
+## Repository Structure
+
+| Package / directory | Purpose |
+|---|---|
+| `yahboom_rosmaster_description` | Robot description and visualization resources |
+| `yahboom_rosmaster_bringup` | Launch and bringup scripts (includes `rosmaster_x3_gazebo.sh`) |
+| `yahboom_rosmaster_gazebo` | Gazebo-related resources |
+| `yahboom_rosmaster_messages` | Custom action/message interfaces (`TimedRotation.action`) |
+| `yahboom_rosmaster_system_tests` | System tests and action-server development |
+| `yahboom_rosmaster` | Robot-specific package/resources |
+| `macanum_drive_controller` | Drive-controller package (directory name keeps the original spelling) |
+
+> Run `colcon list` after cloning to confirm the packages in your checkout.
+
+---
+
+## Getting Started
+
+### Requirements
+- Ubuntu 24.04 with **ROS 2 Jazzy**
+- `colcon`, `rosdep`, RViz 2 and Gazebo packages needed by the launch files
+
+### Build
+
+```bash
+mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src
 git clone https://github.com/Yashs2024/yahboom-rosmaster-ros2.git yahboom_rosmaster
-Build from the workspace root:
+
 cd ~/ros2_ws
 source /opt/ros/jazzy/setup.bash
 rosdep install --from-paths src --ignore-src -r -y
 colcon build --symlink-install
 source install/setup.bash
-If rosdep cannot resolve a dependency, check the dependency's package name and upstream installation instructions. Some simulation packages may require additional Gazebo integration packages.
-Start the Gazebo workflow
-The development workspace used this bringup script:
+```
+
+---
+
+## Usage
+
+### 1. Start the Gazebo workflow
+
+```bash
 cd ~/ros2_ws
 source /opt/ros/jazzy/setup.bash
 source install/setup.bash
 bash src/yahboom_rosmaster/yahboom_rosmaster_bringup/scripts/rosmaster_x3_gazebo.sh
-If the script path differs in your checkout, locate the script first:
-find ~/ros2_ws/src -name 'rosmaster_x3_gazebo.sh'
-Follow any prerequisites or arguments documented inside the script. Launch names and simulator requirements may change as the project evolves.
-Mecanum-drive command interface
-The drive controller in the development setup subscribes to:
-/mecanum_drive_controller/cmd_vel
-Message type:
-geometry_msgs/msg/TwistStamped
-For a mecanum base, twist.linear.x typically represents forward/backward velocity, twist.linear.y represents lateral velocity, and twist.angular.z represents yaw rate. Confirm the controller configuration and sign conventions before testing movement.
+```
 
-Inspect the topic and type:
+If the path differs in your checkout: `find ~/ros2_ws/src -name 'rosmaster_x3_gazebo.sh'`
+
+### 2. Drive the robot (mecanum velocity commands)
+
+The controller subscribes to `/mecanum_drive_controller/cmd_vel` (`geometry_msgs/msg/TwistStamped`).
+
+| Field | Typical meaning on a mecanum base |
+|---|---|
+| `twist.linear.x` | forward / backward |
+| `twist.linear.y` | lateral (strafe) |
+| `twist.angular.z` | yaw rate |
+
+Confirm the sign conventions in your controller configuration first.
+
+```bash
 ros2 topic info /mecanum_drive_controller/cmd_vel
-Example: publish a small lateral command for a short, controlled test while the simulation is running:
-ros2 topic pub --rate 10 /mecanum_drive_controller/cmd_vel geometry_msgs/msg/TwistStamped "{header: {stamp: {sec: 0, nanosec: 0}, frame_id: ''}, twist: {linear: {x: 0.0, y: 0.1, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}}"
-Stop publishing with Ctrl+C. Use conservative speeds and ensure the robot is in a safe simulation state before trying other commands.
-Custom TimedRotation action
-The repository's custom action definition is:
-yahboom_rosmaster_messages/action/TimedRotation.action
-Its interface package is yahboom_rosmaster_messages. The action-server integration lives in yahboom_rosmaster_system_tests and is under development.
 
-After the action server has been built and launched successfully, inspect available actions with:
-ros2 action list -t
-Do not assume the action server is available merely because the interface package builds. The server executable must also compile, be launched, and advertise its action endpoint. Add a verified example ros2 action send_goal command here when the final action definition and server are confirmed.
-Useful debugging commands
-# List all packages in the workspace
-cd ~/ros2_ws && colcon list
+# small lateral test (stop with Ctrl+C)
+ros2 topic pub --rate 10 /mecanum_drive_controller/cmd_vel geometry_msgs/msg/TwistStamped \
+"{header: {stamp: {sec: 0, nanosec: 0}, frame_id: ''}, twist: {linear: {x: 0.0, y: 0.1, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}}"
+```
 
-# Rebuild the system tests and their dependencies
-cd ~/ros2_ws
-source /opt/ros/jazzy/setup.bash
+Use conservative speeds.
+
+---
+
+## Custom TimedRotation Action
+
+- **Definition:** `yahboom_rosmaster_messages/action/TimedRotation.action`
+- **Server (in development):** `yahboom_rosmaster_system_tests`
+
+```bash
+# rebuild the action package and its dependencies
 colcon build --packages-up-to yahboom_rosmaster_system_tests --symlink-install
 
-# Inspect active nodes, topics, and action interfaces
-ros2 node list
-ros2 topic list -t
+# after the server is built AND launched
 ros2 action list -t
+```
 
-# Inspect active controllers (when ros2_control is running)
-ros2 control list_controllers
-If your workspace contains overlapping packages from /opt/ros/jazzy and your local src directory, read any colcon override warning carefully and make sure the intended overlay is sourced.
-Development status
-Area	Status
-Robot description / package structure	Present in the development workspace
-Gazebo bringup workflow	Script available and used during development; validate on a clean install
-Mecanum-drive topic	Identified as /mecanum_drive_controller/cmd_vel (TwistStamped)
-TimedRotation.action interface	Definition and interface package added to the workspace
-TimedRotation action-server executable	In progress; verify compile and runtime before marking complete
-Physical robot validation	Not claimed here
+An interface that builds does not mean the server is running. The executable must compile, be launched and advertise its endpoint.
 
+**Goal / result / feedback fields:** `ADD the fields from TimedRotation.action here`
 
-Update this table as the implementation and testing progress.
-Roadmap
-- Finish and verify the TimedRotation action-server build.
-- Document a verified action goal and result example.
-- Add reproducible launch instructions for a clean Jazzy workspace.
-- Document controller configuration and mecanum-drive sign conventions.
-- Add Gazebo/RViz screenshots, a short demo video, and test results.
-Notes on third-party assets
-This repository may include robot meshes, simulation models, or other upstream resources. Review their license and attribution requirements before redistributing them publicly.
-Author
-Yash Surve
-- GitHub: @Yashs2024
-- Project repository: yahboom-rosmaster-ros2
-For bug reports, include the ROS 2 distribution, the launch command, the relevant package name, and the terminal output from the failing command.
+```bash
+# ADD a verified example once the server works, for example:
+# ros2 action send_goal /<action_name> yahboom_rosmaster_messages/action/TimedRotation "{...}"
+```
+
+---
+
+## Results
+
+> Fill in only what you measured.
+
+| Metric | Value |
+|---|---|
+| Measured simulated lateral speed at `linear.y = 0.1` | `ADD (m/s) or remove` |
+| Rotation accuracy for a timed rotation | `ADD or remove` |
+| Action server round-trip (goal to result) | `ADD or remove` |
+
+---
+
+## Development Status
+
+| Area | Status |
+|---|---|
+| Robot description / package structure | ✅ Present |
+| Gazebo bringup script | ✅ Used in development; validate on a clean install |
+| Mecanum drive topic (`TwistStamped`) | ✅ Identified and used |
+| `TimedRotation.action` interface | ✅ Defined |
+| `TimedRotation` action-server executable | 🟡 In progress |
+| Physical robot validation | ❌ Not claimed |
+
+---
+
+## Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| Robot doesn't move | Check `ros2 control list_controllers`, confirm the topic type is `TwistStamped`, and publish at 10 Hz |
+| Action not listed | Confirm the server is launched, not just built |
+| Overlay warnings from colcon | Make sure the intended workspace is sourced in that terminal |
+| Script path not found | Use the `find` command in [Usage](#usage) |
+
+---
+
+## Roadmap
+
+- [ ] Finish and verify the `TimedRotation` action server (compile, run, advertise)
+- [ ] Document a verified goal/result example
+- [ ] Clean-install launch instructions for Jazzy
+- [ ] Document controller configuration and mecanum sign conventions
+- [ ] Add screenshots, demo video and test results
+- [ ] CI with `colcon build` / `colcon test`
+
+---
+
+## Acknowledgements & Licensing
+
+This repository may include meshes, models or other assets from upstream projects, such as Yahboom's resources. Keep their license and attribution notices and credit them here.
+
+- Upstream source(s): `ADD LINKS`
+- License of this repository: `ADD LICENSE`
+
+---
+
+## Author
+
+**Yash Surve**: Automation & Robotics Engineering, SPPU
+[GitHub](https://github.com/Yashs2024) · [LinkedIn](https://linkedin.com/in/yash-surve-3b6a72253) · [Portfolio](https://yashsurve.vercel.app)
+
+Related project: [MyCobot 280 (ROS 2)](https://github.com/Yashs2024/mycobot-280-ros2)
